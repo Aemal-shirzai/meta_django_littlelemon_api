@@ -39,8 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'LittleLemonAPI.apps.LittlelemonapiConfig',
     'rest_framework',
-    'djoser',
     'rest_framework.authtoken',
+    'djoser',
 ]
 
 MIDDLEWARE = [
@@ -63,6 +63,9 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ]
     
+}
+DJOSER = {
+   "USER_ID_FIELD": "username"
 }
 
 
