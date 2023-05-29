@@ -10,5 +10,5 @@ class MenuItemSerializer(serializers.ModelSerializer):
 class ManagerSerializer(serializers.Serializer):   
     username = serializers.CharField(max_length=255) 
 
-class DeliveryCrewSerializer(serializers.ModelSerializer):
+class DeliveryCrewSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=255)
