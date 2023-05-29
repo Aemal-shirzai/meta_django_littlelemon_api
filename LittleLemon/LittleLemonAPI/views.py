@@ -1,13 +1,14 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.viewsets import ModelViewSet
 from rest_framework import status
-from .serializers import MenuItemSerializer, ManagerSerializer, DeliveryCrewSerializer
-from .models import MenuItem
+from .serializers import MenuItemSerializer, ManagerSerializer, DeliveryCrewSerializer, CartSerializer
+from .models import MenuItem, Cart
 from rest_framework.permissions import IsAuthenticated
 from .custom_permissions import IsManager
 from django.contrib.auth.models import User, Group
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.decorators import api_view, permission_classes
 
 class MenuItemView(ModelViewSet):
     queryset = MenuItem.objects.all()
@@ -19,6 +20,24 @@ class MenuItemView(ModelViewSet):
             self.permission_classes.append(IsManager)
 
         return super(MenuItemView, self).get_permissions()
+
+
+@api_view(['GET', 'POST', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def cart_view(request):
+    if request.method == 'GET':
+        author = Cart.objects.all()
+        serialized_category = CartSerializer(author, many=True)
+        return Response(serialized_category.data)
+    elif request.method == 'POST':
+        item = CartSerializer(data=request.data, context={'request': request})
+        item.is_valid(raise_exception=True)
+        item.save()
+        return Response(item.data, status=status.HTTP_201_CREATED)
+    else:
+        Cart.objects.filter(user__id=request.user.id).delete()
+        return Response({"message": "Cart is now empty"}, status=status.HTTP_200_OK)
+
 
 class ManagerViews(APIView):
     permission_classes = [IsAuthenticated, IsManager]
