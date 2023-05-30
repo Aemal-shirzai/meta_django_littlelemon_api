@@ -9,6 +9,7 @@ from django.contrib.auth.models import User, Group
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
+from django.core.paginator import Paginator, EmptyPage
 
 class MenuItemView(ModelViewSet):
     queryset = MenuItem.objects.all()
@@ -46,10 +47,25 @@ class OrderListViews(APIView):
 
     def get(self, request):
         orders = Order.objects.all()
+        ordering = request.query_params.get('ordering')
+        page = request.query_params.get('page', 1)
+        perpage = request.query_params.get('perpage', 10)
         if is_customer_check(request):
             orders = orders.filter(user__id=request.user.id)
         elif is_crew_check(request):
             orders = orders.filter(delivery_crew__id=request.user.id)
+
+
+        if ordering:
+            ordering_fields = ordering.split(',')
+            orders = orders.order_by(*ordering_fields)
+
+        paginator = Paginator(orders, per_page=perpage)
+        try:
+            orders = paginator.page(number=page)
+        except EmptyPage:
+            orders = []
+
         serialized = OrderSerializer(orders, many=True)
         return Response(serialized.data, status=status.HTTP_200_OK)
 
