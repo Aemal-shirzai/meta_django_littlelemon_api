@@ -92,6 +92,20 @@ class OrderView(APIView):
         serialized = OrderSerializer(order)
         return Response(serialized.data, status=status.HTTP_200_OK)
     
+    def delete(self, request, pk):
+        if not is_manager_check(request):
+            return Response({"message": "You are not allowed to access"}, status=status.HTTP_403_FORBIDDEN)
+       
+        try:
+            order = Order.objects.get(id=pk)
+        except Order.DoesNotExist:
+            return Response({"message": "Not Found"}, status=status.HTTP_404_NOT_FOUND)
+
+        order.delete()
+        return Response({"message": "Ordered Deleted"}, status=status.HTTP_200_OK)
+
+
+
     def patch(self, request, pk):
         if is_customer_check(request):
             return Response({"message": "You are not allowed to access"}, status=status.HTTP_403_FORBIDDEN)
