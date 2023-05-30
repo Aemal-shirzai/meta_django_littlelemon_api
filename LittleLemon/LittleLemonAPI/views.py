@@ -14,6 +14,8 @@ class MenuItemView(ModelViewSet):
     queryset = MenuItem.objects.all()
     serializer_class = MenuItemSerializer
     permission_classes = [IsAuthenticated]
+    ordering_fields = ['id', 'price', 'title', 'category__title']
+    search_fields=['title', 'price', 'category__title']
 
     def get_permissions(self):
         if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
