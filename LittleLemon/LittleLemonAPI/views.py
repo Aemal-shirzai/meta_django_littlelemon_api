@@ -1,10 +1,10 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.viewsets import ModelViewSet
 from rest_framework import status
-from .serializers import MenuItemSerializer, ManagerSerializer, DeliveryCrewSerializer, CartSerializer
-from .models import MenuItem, Cart
+from .serializers import MenuItemSerializer, ManagerSerializer, DeliveryCrewSerializer, CartSerializer, OrderSerializer
+from .models import MenuItem, Cart, Order
 from rest_framework.permissions import IsAuthenticated
-from .custom_permissions import IsManager
+from .custom_permissions import IsManager, is_manager_check, is_crew_check, is_customer_check
 from django.contrib.auth.models import User, Group
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -37,6 +37,19 @@ def cart_view(request):
     else:
         Cart.objects.filter(user__id=request.user.id).delete()
         return Response({"message": "Cart is now empty"}, status=status.HTTP_200_OK)
+
+
+class OrderListViews(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        orders = Order.objects.all()
+        if is_customer_check(request):
+            orders = orders.filter(user__id=request.user.id)
+        elif is_crew_check(request):
+            orders = orders.filter(delivery_crew__id=request.user.id)
+        serialized = OrderSerializer(orders, many=True)
+        return Response(serialized.data, status=status.HTTP_200_OK)
 
 
 class ManagerViews(APIView):

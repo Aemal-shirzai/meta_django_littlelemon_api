@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import MenuItem, Cart
+from .models import MenuItem, Cart, Order, OrderItem
 from .models import User
 
 class MenuItemSerializer(serializers.ModelSerializer):
@@ -20,6 +20,22 @@ class CartSerializer(serializers.ModelSerializer):
         validated_data["price"] = self.get_price(validated_data)
         validated_data["user"] = self.context['request'].user
         return super().create(validated_data)
+
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = '__all__'
+
+class OrderSerializer(serializers.ModelSerializer):
+    order_items = serializers.SerializerMethodField()
+    class Meta:
+        model = Order
+        fields = ['id', 'user', 'delivery_crew', 'status', 'total', 'date', 'order_items']
+
+    def get_order_items(self, obj):
+        order_items = obj.order_items.all()
+        return OrderItemSerializer(order_items, many=True).data
 
 class ManagerSerializer(serializers.Serializer):   
     username = serializers.CharField(max_length=255) 
