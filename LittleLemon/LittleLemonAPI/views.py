@@ -51,6 +51,33 @@ class OrderListViews(APIView):
         serialized = OrderSerializer(orders, many=True)
         return Response(serialized.data, status=status.HTTP_200_OK)
 
+    def post(self, request):
+        if not is_customer_check(request):
+            return Response({"message": "Only Customers can access this"}, status=status.HTTP_403_FORBIDDEN)
+        
+        cart_items = Cart.objects.filter(user__id=request.user.id)
+        if not cart_items:
+            return Response({"message": "Your cart is empty"}, status=status.HTTP_200_OK)
+        
+        total = 0
+        order = Order.objects.create(user=request.user, total=total)
+
+        for cart_item in cart_items:
+            order.order_items.create(
+                menuitem=cart_item.menuitem,
+                quantity=cart_item.quantity,
+                unit_price=cart_item.unit_price,
+                price=cart_item.price
+            )
+            total += cart_item.price
+
+        order.total = total
+        order.save()   
+        cart_items.delete()
+        serialized = OrderSerializer(order)
+        return Response(serialized.data, status=status.HTTP_200_OK)
+
+
 
 class ManagerViews(APIView):
     permission_classes = [IsAuthenticated, IsManager]
