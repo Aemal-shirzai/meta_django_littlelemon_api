@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.viewsets import ModelViewSet
 from rest_framework import status
-from .serializers import MenuItemSerializer, ManagerSerializer, DeliveryCrewSerializer, CartSerializer, OrderSerializer
+from .serializers import MenuItemSerializer, ManagerSerializer, DeliveryCrewSerializer, CartSerializer, OrderSerializer, ManagerOrderSerializer
 from .models import MenuItem, Cart, Order
 from rest_framework.permissions import IsAuthenticated
 from .custom_permissions import IsManager, is_manager_check, is_crew_check, is_customer_check
@@ -77,6 +77,53 @@ class OrderListViews(APIView):
         serialized = OrderSerializer(order)
         return Response(serialized.data, status=status.HTTP_200_OK)
 
+class OrderView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, pk):
+        try:
+            order = Order.objects.get(id=pk)
+        except Order.DoesNotExist:
+            return Response({"message": "Not Found"}, status=status.HTTP_404_NOT_FOUND)
+        if is_customer_check(request) and order.user != request.user:
+            return Response({"message": "You are not allowed to access this order"}, status=status.HTTP_403_FORBIDDEN)
+        elif is_crew_check(request) and order.delivery_crew != request.user:
+            return Response({"message": "You are not allowed to access this order"}, status=status.HTTP_403_FORBIDDEN)
+
+        serialized = OrderSerializer(order)
+        return Response(serialized.data, status=status.HTTP_200_OK)
+    
+    def patch(self, request, pk):
+        if is_customer_check(request):
+            return Response({"message": "You are not allowed to access"}, status=status.HTTP_403_FORBIDDEN)
+       
+        try:
+            order = Order.objects.get(id=pk)
+        except Order.DoesNotExist:
+            return Response({"message": "Not Found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if is_manager_check(request):
+            item = ManagerOrderSerializer(data=request.data)
+            item.is_valid(raise_exception=True)
+            
+            try:
+               delivery_crew = User.objects.get(username=item.validated_data['username'])
+            except User.DoesNotExist:
+                return Response({"message": "Delivery Crew Not Found"}, status=status.HTTP_404_NOT_FOUND)
+
+            if not delivery_crew.groups.filter(name='Delivery Crew').exists():
+                return Response({"message": "The Selected user is not a delivery crew"}, status=status.HTTP_403_FORBIDDEN)
+
+            order.delivery_crew = delivery_crew
+            order.save()
+            return Response({"message": "Deliver Crew Set"}, status=status.HTTP_200_OK)
+        
+        # Delivery cew
+        if order.delivery_crew != request.user:
+            return Response({"message": "You are not allowed to access this order"}, status=status.HTTP_403_FORBIDDEN)
+        
+        order.status = 1
+        order.save()
+        return Response({"message": "Ordered Delivered"}, status=status.HTTP_200_OK)
 
 
 class ManagerViews(APIView):

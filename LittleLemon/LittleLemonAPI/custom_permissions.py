@@ -12,7 +12,7 @@ def is_manager_check(request):
     return True if request.user.groups.filter(name='Manager').exists() else False
 
 def is_crew_check(request):
-    return True if request.user.groups.filter(name='Delivery crew').exists() else False
+    return True if request.user.groups.filter(name='Delivery Crew').exists() else False
 
 def is_customer_check(request):
     return True if not is_manager_check(request) and not is_crew_check(request) else False

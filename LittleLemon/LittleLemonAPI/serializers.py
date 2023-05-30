@@ -37,6 +37,10 @@ class OrderSerializer(serializers.ModelSerializer):
         order_items = obj.order_items.all()
         return OrderItemSerializer(order_items, many=True).data
 
+
+class ManagerOrderSerializer(serializers.Serializer):   
+    username = serializers.CharField(max_length=255) 
+
 class ManagerSerializer(serializers.Serializer):   
     username = serializers.CharField(max_length=255) 
 
