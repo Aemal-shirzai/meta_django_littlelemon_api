@@ -4,6 +4,7 @@ from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter(trailing_slash=False)
 router.register('menu-items', views.MenuItemView, basename='menue-items')
+router.register('categories', views.CategoryView, basename='categories')
 urlpatterns = router.urls + [
     path("cart/menu-items/", views.cart_view, name="cart-menus"),
     path("orders/", views.OrderListViews.as_view(), name="orders-list"),

@@ -1,8 +1,8 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.viewsets import ModelViewSet
 from rest_framework import status
-from .serializers import MenuItemSerializer, ManagerSerializer, DeliveryCrewSerializer, CartSerializer, OrderSerializer, ManagerOrderSerializer
-from .models import MenuItem, Cart, Order
+from .serializers import MenuItemSerializer, CategorySerializer, ManagerSerializer, DeliveryCrewSerializer, CartSerializer, OrderSerializer, ManagerOrderSerializer
+from .models import MenuItem, Category, Cart, Order
 from rest_framework.permissions import IsAuthenticated
 from .custom_permissions import IsManager, is_manager_check, is_crew_check, is_customer_check
 from django.contrib.auth.models import User, Group
@@ -13,6 +13,20 @@ from django.core.paginator import Paginator, EmptyPage
 from rest_framework.decorators import api_view,throttle_classes
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
+
+class CategoryView(ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [IsAuthenticated]
+    ordering_fields = '__all__'
+    search_fields= '__all__'
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
+
+    def get_permissions(self):
+        if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
+            self.permission_classes.append(IsManager)
+
+        return super(CategoryView, self).get_permissions()
 
 class MenuItemView(ModelViewSet):
     queryset = MenuItem.objects.all()
