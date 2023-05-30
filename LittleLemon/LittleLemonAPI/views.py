@@ -10,6 +10,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from django.core.paginator import Paginator, EmptyPage
+from rest_framework.decorators import api_view,throttle_classes
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
+
 
 class MenuItemView(ModelViewSet):
     queryset = MenuItem.objects.all()
@@ -17,6 +20,7 @@ class MenuItemView(ModelViewSet):
     permission_classes = [IsAuthenticated]
     ordering_fields = ['id', 'price', 'title', 'category__title']
     search_fields=['title', 'price', 'category__title']
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
     def get_permissions(self):
         if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
@@ -27,6 +31,7 @@ class MenuItemView(ModelViewSet):
 
 @api_view(['GET', 'POST', 'DELETE'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def cart_view(request):
     if request.method == 'GET':
         author = Cart.objects.all()
@@ -44,6 +49,7 @@ def cart_view(request):
 
 class OrderListViews(APIView):
     permission_classes = [IsAuthenticated]
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
     def get(self, request):
         orders = Order.objects.all()
@@ -97,6 +103,8 @@ class OrderListViews(APIView):
 
 class OrderView(APIView):
     permission_classes = [IsAuthenticated]
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
+
     def get(self, request, pk):
         try:
             order = Order.objects.get(id=pk)
@@ -160,6 +168,7 @@ class OrderView(APIView):
 
 class ManagerViews(APIView):
     permission_classes = [IsAuthenticated, IsManager]
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
     def get(self, request):
         queryset = User.objects.filter(groups__name='Manager')
@@ -201,7 +210,8 @@ class ManagerViews(APIView):
 
 class DeliveryCrewViews(APIView):
     permission_classes = [IsAuthenticated, IsManager]
-
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
+    
     def get(self, request):
         queryset = User.objects.filter(groups__name='Delivery Crew')
         serializer = DeliveryCrewSerializer(queryset, many=True)
