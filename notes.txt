@@ -1,0 +1,11 @@
+Super user and manager:
+Username -> admin
+password -> admin@123
+
+Customer:
+Username -> customer
+Password -> admin@123
+
+Crew:
+Username -> crew
+Password -> admin@123
